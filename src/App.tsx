@@ -1,5 +1,7 @@
 import { cloneDeep } from "lodash";
+import { Pause, Play } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useInterval } from "usehooks-ts";
 import Board from "./components/Board";
 import PriorityQueue from "./components/PriorityQueue";
 import VisitedStates from "./components/VisitedStates";
@@ -9,7 +11,10 @@ import {
   boardToString,
   createInitialState,
   findTilePosition,
+  getEuclideanDistance,
+  getManhattanDistance,
   getNextQueueItems,
+  isSolvable,
   isSolved,
   isValidMove,
 } from "./utils/puzzleUtils";
@@ -20,6 +25,9 @@ function App() {
   const nextQueueItems = getNextQueueItems(gameState, visitedStates, []);
   const [queueItems, setQueueItems] = useState<QueueItem[]>(
     new PQueue(nextQueueItems).getItems()
+  );
+  const [hFunction, setHFunction] = useState<"manhattan" | "euclidean">(
+    "euclidean"
   );
   const [lastMovedTile, setLastMovedTile] = useState<number | null>(null);
   const [history, setHistory] = useState<
@@ -33,6 +41,7 @@ function App() {
     queueItems[0]
   );
   const initialConfigRef = useRef<HTMLInputElement>(null);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
   useEffect(() => {
     const initialConfig = localStorage.getItem("puzzle-config");
@@ -79,7 +88,8 @@ function App() {
       const newQueueItems = getNextQueueItems(
         newPuzzleState,
         newVisitedStates,
-        queueItems
+        queueItems,
+        hFunction
       );
       const newQueue = new PQueue(
         [
@@ -132,7 +142,8 @@ function App() {
     const newItems = getNextQueueItems(
       newPuzzleState,
       newVisitedStates,
-      queueItems
+      queueItems,
+      hFunction
     );
     const newQueueItems = [
       ...queueItems.map((item) => ({ ...item, isNew: false })),
@@ -164,7 +175,7 @@ function App() {
     setGameState(newState);
     setLastMovedTile(null);
     setVisitedStates([]);
-    const queue = new PQueue(getNextQueueItems(newState, [], []));
+    const queue = new PQueue(getNextQueueItems(newState, [], [], hFunction));
     setQueueItems(queue.getItems());
     setHistory([]);
     setSelectedMove(queue.first() || null);
@@ -185,6 +196,29 @@ function App() {
 
     resetGame(config);
   };
+
+  const handleHFunctionChange = (hFunction: "manhattan" | "euclidean") => {
+    setHFunction(hFunction);
+    const queue = queueItems
+      .map((item) => {
+        const g = item.g;
+        const h =
+          hFunction === "manhattan"
+            ? getManhattanDistance(item.board)
+            : getEuclideanDistance(item.board);
+        const f = g + h;
+        return { ...item, g, h, f };
+      })
+      .sort((a, b) => a.f - b.f);
+    setQueueItems(queue);
+  };
+
+  useInterval(
+    () => {
+      handleNextMove();
+    },
+    isAutoPlaying ? 1000 : null
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start py-8">
@@ -216,10 +250,15 @@ function App() {
             <p className="text-gray-600 text-sm">
               Để trống để tạo ngẫu nhiên, 0 là ô trống
             </p>
+            {!isSolvable(gameState.board) && (
+              <p className="text-red-500 text-sm">
+                Lưu ý: Bài toán này không có lời giải.
+              </p>
+            )}
           </div>
         </form>
         <div className="flex gap-8">
-          <div>
+          <div className="flex flex-col items-center">
             <Board
               board={gameState.board}
               lastMovedTile={lastMovedTile}
@@ -249,6 +288,23 @@ function App() {
               >
                 {isSolved(gameState.board) ? "Giải xong!" : "Đi tiếp"}
               </button>
+
+              <button
+                onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+                disabled={isSolved(gameState.board)}
+                className={`px-6 py-2 rounded-lg font-semibold flex items-center justify-center gap-2 ${
+                  isAutoPlaying
+                    ? "bg-red-500 hover:bg-red-600 text-white"
+                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                }`}
+              >
+                {isAutoPlaying ? (
+                  <Pause className="w-4 h-4" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
+                {isAutoPlaying ? "Tạm dừng" : "Tự động đi tiếp"}
+              </button>
             </div>
             <div className="mt-4 text-gray-600 flex justify-center">
               Số lần đã đi: {gameState.moves} | Số lần đã xét:{" "}
@@ -257,13 +313,43 @@ function App() {
           </div>
           <VisitedStates visitedStates={Array.from(visitedStates)} />
         </div>
-        <PriorityQueue items={queueItems} selectedMove={selectedMove} />
+        <div className="flex flex-col items-start gap-4 mt-8">
+          <h2 className="text-xl font-semibold mb-4">
+            Hàng đợi ưu tiên (Priority Queue)
+          </h2>
+
+          <div className="flex items-center gap-4">
+            <div className="text-gray-600 text-sm">Hàm h:</div>
+            <button
+              onClick={() => handleHFunctionChange("manhattan")}
+              className={`px-6 py-2 rounded-lg font-semibold ${
+                hFunction === "manhattan"
+                  ? "bg-blue-500 hover:bg-blue-600 text-white"
+                  : "bg-gray-400 "
+              }`}
+            >
+              Dùng hàm Manhattan
+            </button>
+            <button
+              onClick={() => handleHFunctionChange("euclidean")}
+              className={`px-6 py-2 rounded-lg font-semibold ${
+                hFunction === "euclidean"
+                  ? "bg-blue-500 hover:bg-blue-600 text-white"
+                  : "bg-gray-400 "
+              }`}
+            >
+              Dùng hàm Euclidean
+            </button>
+          </div>
+          <PriorityQueue items={queueItems} selectedMove={selectedMove} />
+        </div>
       </div>
       <footer className="text-gray-600 text-sm mt-8 text-center">
         Bài tập nhóm - Nhập môn Trí tuệ nhân tạo - B2CQ-CNTT02-K68 - HUST |{" "}
         <a
           href="https://github.com/hieptuanle/8-puzzle-a-star"
           target="_blank"
+          rel="noreferrer"
           className="text-blue-500 hover:text-blue-600"
         >
           Github

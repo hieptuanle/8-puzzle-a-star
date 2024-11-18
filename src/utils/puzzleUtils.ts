@@ -5,6 +5,7 @@ export const getNextQueueItems = (
   state: PuzzleState,
   visited: Array<string>,
   currentQueue: QueueItem[],
+  currentHFunction: "manhattan" | "euclidean" = "euclidean",
 ): QueueItem[] => {
   const moves = getValidMoves(state);
   return moves
@@ -16,7 +17,9 @@ export const getNextQueueItems = (
     )
     .map((move) => {
       const g = state.moves + 1;
-      const h = getEuclideanDistance(move.board);
+      const h = currentHFunction === "manhattan"
+        ? getManhattanDistance(move.board)
+        : getEuclideanDistance(move.board);
       const f = g + h;
       return {
         id: nanoid(),
@@ -236,4 +239,19 @@ export const stringToBoard = (boardStr: string): number[][] => {
     board.push(numbers.slice(i * 3, (i + 1) * 3));
   }
   return board;
+};
+
+export const isSolvable = (board: number[][]): boolean => {
+  const flattened = board.flat();
+  const inversionCount = flattened.reduce((count, current, index) => {
+    if (current === 0) return count;
+    for (let i = index + 1; i < flattened.length; i++) {
+      if (flattened[i] && flattened[i] < current) {
+        count++;
+      }
+    }
+    return count;
+  }, 0);
+
+  return inversionCount % 2 === 0;
 };

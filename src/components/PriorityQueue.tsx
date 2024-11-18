@@ -13,10 +13,7 @@ const PriorityQueue: React.FC<PriorityQueueProps> = ({
   selectedMove,
 }) => {
   return (
-    <div className="w-full max-w-3xl mt-8">
-      <h2 className="text-xl font-semibold mb-4">
-        Hàng đợi ưu tiên (Priority Queue)
-      </h2>
+    <div className="w-full max-w-3xl">
       <motion.div className="grid grid-cols-4 gap-4">
         <AnimatePresence>
           {items.map((item) => (
