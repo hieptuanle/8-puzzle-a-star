@@ -1,6 +1,5 @@
 import React from "react";
 import Tile from "./Tile";
-import { Position } from "../types/PuzzleTypes";
 
 interface BoardProps {
   board: number[][];
