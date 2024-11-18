@@ -4,10 +4,16 @@ import { Node, Position, PuzzleState, QueueItem } from "../types/PuzzleTypes";
 export const getNextQueueItems = (
   state: PuzzleState,
   visited: Array<string>,
+  currentQueue: QueueItem[],
 ): QueueItem[] => {
   const moves = getValidMoves(state);
   return moves
     .filter((move) => !visited.includes(boardToString(move.board)))
+    .filter((move) =>
+      !currentQueue.some((item) =>
+        boardToString(item.board) === boardToString(move.board)
+      )
+    )
     .map((move) => {
       const g = state.moves + 1;
       const h = getEuclideanDistance(move.board);

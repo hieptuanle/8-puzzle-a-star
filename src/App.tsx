@@ -17,7 +17,7 @@ import {
 function App() {
   const [gameState, setGameState] = useState<PuzzleState>(createInitialState());
   const [visitedStates, setVisitedStates] = useState<Array<string>>([]);
-  const nextQueueItems = getNextQueueItems(gameState, visitedStates);
+  const nextQueueItems = getNextQueueItems(gameState, visitedStates, []);
   const [queueItems, setQueueItems] = useState<QueueItem[]>(
     new PQueue(nextQueueItems).getItems()
   );
@@ -53,21 +53,46 @@ function App() {
       newBoard[gameState.emptyPos.row][gameState.emptyPos.col] = value;
       newBoard[tilePos.row][tilePos.col] = 0;
 
+      const newVisitedStates = [...visitedStates];
+      if (!newVisitedStates.includes(boardToString(newBoard))) {
+        newVisitedStates.unshift(boardToString(newBoard));
+      }
+
       setHistory((prev) => [
         ...prev,
         {
           state: gameState,
           queue: queueItems,
-          visited: [...visitedStates],
+          visited: [...newVisitedStates],
         },
       ]);
       setLastMovedTile(value);
-      setGameState((prev) => ({
-        ...prev,
+
+      const newPuzzleState: PuzzleState = {
         board: newBoard,
         emptyPos: tilePos,
-        moves: prev.moves + 1,
-      }));
+        moves: gameState.moves + 1,
+        path: [...gameState.path, boardToString(gameState.board)],
+      };
+
+      setGameState(newPuzzleState);
+      const newQueueItems = getNextQueueItems(
+        newPuzzleState,
+        newVisitedStates,
+        queueItems
+      );
+      const newQueue = new PQueue(
+        [
+          ...queueItems.map((item) => ({ ...item, isNew: false })),
+          ...newQueueItems,
+        ].filter(
+          (item) => boardToString(item.board) !== boardToString(newBoard)
+        )
+      ).getItems();
+
+      setQueueItems(newQueue);
+      setSelectedMove(newQueue[0]);
+      setVisitedStates(newVisitedStates);
     }
   };
 
@@ -104,7 +129,11 @@ function App() {
 
     setGameState(newPuzzleState);
 
-    const newItems = getNextQueueItems(newPuzzleState, newVisitedStates);
+    const newItems = getNextQueueItems(
+      newPuzzleState,
+      newVisitedStates,
+      queueItems
+    );
     const newQueueItems = [
       ...queueItems.map((item) => ({ ...item, isNew: false })),
       ...newItems,
@@ -135,7 +164,7 @@ function App() {
     setGameState(newState);
     setLastMovedTile(null);
     setVisitedStates([]);
-    const queue = new PQueue(getNextQueueItems(newState, []));
+    const queue = new PQueue(getNextQueueItems(newState, [], []));
     setQueueItems(queue.getItems());
     setHistory([]);
     setSelectedMove(queue.first() || null);
