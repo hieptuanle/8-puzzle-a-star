@@ -159,75 +159,89 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start py-8">
-      <h1 className="text-4xl font-bold text-gray-800 mb-2">Bài toán 8 số</h1>
-      <div className="text-gray-600 text-xl mb-4">
-        Giải bằng <span className="font-bold">thuật toán tìm kiếm A*</span>
-      </div>
-      <form className="mb-4 flex items-center gap-8" onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="initial-config" className="text-gray-600">
-            Cấu hình ban đầu
-          </label>
-          <div className="flex items-center">
-            <input
-              id="initial-config"
-              type="text"
-              className="w-16 p-2 rounded-lg border border-gray-300 min-w-80 rounded-r-none"
-              placeholder="0,1,2,3,4,5,6,7,8"
-              ref={initialConfigRef}
+      <div className="flex flex-grow flex-col items-center">
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">Bài toán 8 số</h1>
+        <div className="text-gray-600 text-xl mb-4">
+          Giải bằng <span className="font-bold">thuật toán tìm kiếm A*</span>
+        </div>
+        <form className="mb-4 flex items-center gap-8" onSubmit={handleSubmit}>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="initial-config" className="text-gray-600">
+              Cấu hình ban đầu
+            </label>
+            <div className="flex items-center">
+              <input
+                id="initial-config"
+                type="text"
+                className="w-16 p-2 rounded-lg border border-gray-300 min-w-80 rounded-r-none"
+                placeholder="0,1,2,3,4,5,6,7,8"
+                ref={initialConfigRef}
+              />
+              <button
+                type="submit"
+                className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold rounded-l-none"
+              >
+                Game mới
+              </button>
+            </div>
+            <p className="text-gray-600 text-sm">
+              Để trống để tạo ngẫu nhiên, 0 là ô trống
+            </p>
+          </div>
+        </form>
+        <div className="flex gap-8">
+          <div>
+            <Board
+              board={gameState.board}
+              lastMovedTile={lastMovedTile}
+              onTileClick={handleTileClick}
             />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold rounded-l-none"
-            >
-              Game mới
-            </button>
-          </div>
-          <p className="text-gray-600 text-sm">
-            Để trống để tạo ngẫu nhiên, 0 là ô trống
-          </p>
-        </div>
-      </form>
-      <div className="flex gap-8">
-        <div>
-          <Board
-            board={gameState.board}
-            lastMovedTile={lastMovedTile}
-            onTileClick={handleTileClick}
-          />
-          <div className="mt-8 flex items-center gap-4 justify-center">
-            <button
-              onClick={handleUndo}
-              disabled={history.length === 0}
-              className={`px-6 py-2 rounded-lg font-semibold ${
-                history.length === 0
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-yellow-500 hover:bg-yellow-600 text-white"
-              }`}
-            >
-              Quay lại
-            </button>
+            <div className="mt-8 flex items-center gap-4 justify-center">
+              <button
+                onClick={handleUndo}
+                disabled={history.length === 0}
+                className={`px-6 py-2 rounded-lg font-semibold ${
+                  history.length === 0
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-yellow-500 hover:bg-yellow-600 text-white"
+                }`}
+              >
+                Quay lại
+              </button>
 
-            <button
-              onClick={handleNextMove}
-              disabled={isSolved(gameState.board)}
-              className={`px-6 py-2 rounded-lg font-semibold ${
-                isSolved(gameState.board)
-                  ? "bg-green-400 cursor-not-allowed text-white"
-                  : "bg-blue-500 hover:bg-blue-600 text-white"
-              }`}
-            >
-              {isSolved(gameState.board) ? "Giải xong!" : "Đi tiếp"}
-            </button>
+              <button
+                onClick={handleNextMove}
+                disabled={isSolved(gameState.board)}
+                className={`px-6 py-2 rounded-lg font-semibold ${
+                  isSolved(gameState.board)
+                    ? "bg-green-400 cursor-not-allowed text-white"
+                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                }`}
+              >
+                {isSolved(gameState.board) ? "Giải xong!" : "Đi tiếp"}
+              </button>
+            </div>
+            <div className="mt-4 text-gray-600 flex justify-center">
+              Số lần đã đi: {gameState.moves} | Số lần đã xét:{" "}
+              {visitedStates.length}
+            </div>
           </div>
-          <div className="mt-4 text-gray-600 flex justify-center">
-            Số lần đã đi: {gameState.moves} | Số lần đã xét:{" "}
-            {visitedStates.length}
-          </div>
+          <VisitedStates visitedStates={Array.from(visitedStates)} />
         </div>
-        <VisitedStates visitedStates={Array.from(visitedStates)} />
+        <PriorityQueue items={queueItems} selectedMove={selectedMove} />
       </div>
-      <PriorityQueue items={queueItems} selectedMove={selectedMove} />
+      <footer className="text-gray-600 text-sm mt-8 text-center">
+        Bài tập nhóm - Nhập môn Trí tuệ nhân tạo - B2CQ-CNTT02-K68 - HUST |{" "}
+        <a
+          href="https://github.com/hieptuanle/8-puzzle-a-star"
+          target="_blank"
+          className="text-blue-500 hover:text-blue-600"
+        >
+          Github
+        </a>
+        <br />
+        MIT License - 2024
+      </footer>
     </div>
   );
 }
