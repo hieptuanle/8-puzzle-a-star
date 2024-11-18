@@ -174,7 +174,7 @@ function App() {
                 id="initial-config"
                 type="text"
                 className="w-16 p-2 rounded-lg border border-gray-300 min-w-80 rounded-r-none"
-                placeholder="0,1,2,3,4,5,6,7,8"
+                placeholder="012345678"
                 ref={initialConfigRef}
               />
               <button
