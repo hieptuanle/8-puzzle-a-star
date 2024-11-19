@@ -168,7 +168,11 @@ function App() {
     setLastMovedTile(null);
 
     setSelectedMove(newQueueItems[0]);
-  }, [gameState, visitedStates, queueItems]);
+
+    if (isSolved(gameState.board)) {
+      setIsAutoPlaying(false);
+    }
+  }, [gameState, visitedStates, queueItems, hFunction]);
 
   const resetGame = (initialConfig?: string) => {
     const newState = createInitialState(initialConfig);
