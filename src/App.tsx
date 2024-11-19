@@ -195,6 +195,18 @@ function App() {
       inputRef.value = config;
     }
 
+    // validate config
+    if (!/^\d{9}$/.test(config)) {
+      alert("Cấu phải gồm 9 số từ 0 đến 8!");
+      return;
+    }
+
+    const distinctConfig = new Set(config.split(""));
+    if (distinctConfig.size !== 9) {
+      alert("Cấu phải gồm 9 số khác nhau!");
+      return;
+    }
+
     localStorage.setItem("puzzle-config", config);
 
     resetGame(config);
