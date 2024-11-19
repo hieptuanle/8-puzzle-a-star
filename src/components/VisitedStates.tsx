@@ -9,9 +9,9 @@ interface VisitedStatesProps {
 
 const VisitedStates: React.FC<VisitedStatesProps> = ({ visitedStates }) => {
   return (
-    <div className="bg-gray-100 p-4 rounded-lg shadow-md w-52">
+    <div className="bg-gray-100 p-4 rounded-lg shadow-md max-w-sm mx-auto px-4 md:w-52">
       <h2 className="text-xl font-semibold mb-4">Visited States</h2>
-      <div className="space-y-2 max-h-96 overflow-y-auto flex flex-col px-4">
+      <div className="gap-2 max-h-96 overflow-x-auto md:overflow-y-auto flex flex-row flex-nowrap md:flex-col w-full md:px-4">
         <AnimatePresence>
           {visitedStates.map((boardStr) => (
             <motion.div
@@ -19,6 +19,7 @@ const VisitedStates: React.FC<VisitedStatesProps> = ({ visitedStates }) => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
+              className="min-w-[108px] md:min-w-full"
             >
               <MiniBoard
                 board={stringToBoard(boardStr)}

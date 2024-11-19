@@ -13,8 +13,8 @@ const PriorityQueue: React.FC<PriorityQueueProps> = ({
   selectedMove,
 }) => {
   return (
-    <div className="w-full max-w-3xl">
-      <motion.div className="grid grid-cols-4 gap-4">
+    <div className="w-full max-w-3xl mt-4">
+      <motion.div className="grid grid-cols-3 md:grid-cols-4 gap-4">
         <AnimatePresence>
           {items.map((item) => (
             <MiniBoard

@@ -47,7 +47,7 @@ const MiniBoard: React.FC<MiniBoardProps> = ({
           <div
             key={index}
             className={`${
-              mini ? "w-6 h-6" : "w-10 h-10"
+              mini ? "w-5 h-5 md:w-6 md:h-6" : "w-7 h-7 md:w-8 md:h-8"
             } text-xs flex items-center justify-center font-semibold ${
               value === 0 ? "bg-gray-200" : "bg-blue-500 text-white"
             } rounded`}

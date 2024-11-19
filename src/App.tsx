@@ -228,7 +228,7 @@ function App() {
           Giải bằng <span className="font-bold">thuật toán tìm kiếm A*</span>
         </div>
         <form className="mb-4 flex items-center gap-8" onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 px-4 md:px-0">
             <label htmlFor="initial-config" className="text-gray-600">
               Cấu hình ban đầu
             </label>
@@ -236,13 +236,13 @@ function App() {
               <input
                 id="initial-config"
                 type="text"
-                className="w-16 p-2 rounded-lg border border-gray-300 min-w-80 rounded-r-none"
+                className="p-2 rounded-lg border border-gray-300 min-w-40 rounded-r-none text-sm md:text-base"
                 placeholder="012345678"
                 ref={initialConfigRef}
               />
               <button
                 type="submit"
-                className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold rounded-l-none"
+                className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold rounded-l-none text-sm md:text-base"
               >
                 Game mới
               </button>
@@ -257,7 +257,7 @@ function App() {
             )}
           </div>
         </form>
-        <div className="flex gap-8">
+        <div className="flex flex-col md:flex-row gap-8">
           <div className="flex flex-col items-center">
             <Board
               board={gameState.board}
@@ -313,7 +313,7 @@ function App() {
           </div>
           <VisitedStates visitedStates={Array.from(visitedStates)} />
         </div>
-        <div className="flex flex-col items-start gap-4 mt-8">
+        <div className="flex flex-col items-start gap-4 mt-8 px-4">
           <h2 className="text-xl font-semibold mb-4">
             Hàng đợi ưu tiên (Priority Queue)
           </h2>
@@ -344,7 +344,7 @@ function App() {
           <PriorityQueue items={queueItems} selectedMove={selectedMove} />
         </div>
       </div>
-      <footer className="text-gray-600 text-sm mt-8 text-center">
+      <footer className="text-gray-600 text-sm mt-8 text-center px-4">
         Bài tập nhóm - Nhập môn Trí tuệ nhân tạo - B2CQ-CNTT02-K68 - HUST |{" "}
         <a
           href="https://github.com/hieptuanle/8-puzzle-a-star"
