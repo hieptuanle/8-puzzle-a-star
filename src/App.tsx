@@ -5,13 +5,14 @@ import { useInterval } from "usehooks-ts";
 import Board from "./components/Board";
 import PriorityQueue from "./components/PriorityQueue";
 import VisitedStates from "./components/VisitedStates";
-import { PuzzleState, QueueItem } from "./types/PuzzleTypes";
+import { HFunction, PuzzleState, QueueItem } from "./types/PuzzleTypes";
 import PQueue from "./utils/PQueue";
 import {
   boardToString,
   createInitialState,
   findTilePosition,
   getEuclideanDistance,
+  getLinearConflict,
   getManhattanDistance,
   getNextQueueItems,
   isSolvable,
@@ -26,9 +27,7 @@ function App() {
   const [queueItems, setQueueItems] = useState<QueueItem[]>(
     new PQueue(nextQueueItems).getItems()
   );
-  const [hFunction, setHFunction] = useState<"manhattan" | "euclidean">(
-    "euclidean"
-  );
+  const [hFunction, setHFunction] = useState<HFunction>("euclidean");
   const [lastMovedTile, setLastMovedTile] = useState<number | null>(null);
   const [history, setHistory] = useState<
     {
@@ -201,7 +200,7 @@ function App() {
     resetGame(config);
   };
 
-  const handleHFunctionChange = (hFunction: "manhattan" | "euclidean") => {
+  const handleHFunctionChange = (hFunction: HFunction) => {
     setHFunction(hFunction);
     const queue = queueItems
       .map((item) => {
@@ -209,12 +208,15 @@ function App() {
         const h =
           hFunction === "manhattan"
             ? getManhattanDistance(item.board)
-            : getEuclideanDistance(item.board);
+            : hFunction === "euclidean"
+            ? getEuclideanDistance(item.board)
+            : getManhattanDistance(item.board) + getLinearConflict(item.board);
         const f = g + h;
         return { ...item, g, h, f };
       })
       .sort((a, b) => a.f - b.f);
     setQueueItems(queue);
+    setSelectedMove(queue[0]);
   };
 
   useInterval(
@@ -295,10 +297,10 @@ function App() {
 
               <button
                 onClick={() => {
-                  setIsAutoPlaying(!isAutoPlaying);
-                  if (isSolved(gameState.board)) {
+                  if (isSolved(gameState.board) || isAutoPlaying) {
                     setIsAutoPlaying(false);
                   } else {
+                    setIsAutoPlaying(!isAutoPlaying);
                     handleNextMove();
                   }
                 }}
@@ -331,18 +333,8 @@ function App() {
             Hàng đợi ưu tiên (Priority Queue)
           </h2>
 
-          <div className="flex items-center gap-4">
-            <div className="text-gray-600 text-sm">Hàm h:</div>
-            <button
-              onClick={() => handleHFunctionChange("manhattan")}
-              className={`px-6 py-2 rounded-lg font-semibold ${
-                hFunction === "manhattan"
-                  ? "bg-blue-500 hover:bg-blue-600 text-white"
-                  : "bg-gray-400 "
-              }`}
-            >
-              Dùng hàm Manhattan
-            </button>
+          <div className="text-gray-600 text-sm">Chọn hàm heuristic:</div>
+          <div className="flex items-stretch md:items-center gap-4">
             <button
               onClick={() => handleHFunctionChange("euclidean")}
               className={`px-6 py-2 rounded-lg font-semibold ${
@@ -351,7 +343,28 @@ function App() {
                   : "bg-gray-400 "
               }`}
             >
-              Dùng hàm Euclidean
+              Euclidean Distance
+            </button>
+            <button
+              onClick={() => handleHFunctionChange("manhattan")}
+              className={`px-6 py-2 rounded-lg font-semibold ${
+                hFunction === "manhattan"
+                  ? "bg-blue-500 hover:bg-blue-600 text-white"
+                  : "bg-gray-400 "
+              }`}
+            >
+              Manhattan Distance
+            </button>
+
+            <button
+              onClick={() => handleHFunctionChange("manhattan-linear-conflict")}
+              className={`px-6 py-2 rounded-lg font-semibold ${
+                hFunction === "manhattan-linear-conflict"
+                  ? "bg-blue-500 hover:bg-blue-600 text-white"
+                  : "bg-gray-400 "
+              }`}
+            >
+              Manhattan + Linear Conflict
             </button>
           </div>
           <PriorityQueue items={queueItems} selectedMove={selectedMove} />

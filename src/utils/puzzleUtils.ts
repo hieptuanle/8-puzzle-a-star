@@ -1,11 +1,16 @@
 import { nanoid } from "nanoid";
-import { Node, Position, PuzzleState, QueueItem } from "../types/PuzzleTypes";
+import {
+  HFunction,
+  Position,
+  PuzzleState,
+  QueueItem,
+} from "../types/PuzzleTypes";
 
 export const getNextQueueItems = (
   state: PuzzleState,
   visited: Array<string>,
   currentQueue: QueueItem[],
-  currentHFunction: "manhattan" | "euclidean" = "euclidean",
+  currentHFunction: HFunction = "euclidean",
 ): QueueItem[] => {
   const moves = getValidMoves(state);
   return moves
@@ -19,7 +24,10 @@ export const getNextQueueItems = (
       const g = state.moves + 1;
       const h = currentHFunction === "manhattan"
         ? getManhattanDistance(move.board)
-        : getEuclideanDistance(move.board);
+        : currentHFunction === "euclidean"
+        ? getEuclideanDistance(move.board)
+        : getManhattanDistance(move.board) + getLinearConflict(move.board);
+
       const f = g + h;
       return {
         id: nanoid(),
@@ -112,6 +120,60 @@ export const getEuclideanDistance = (board: number[][]): number => {
   return distance;
 };
 
+export const getLinearConflict = (board: number[][]): number => {
+  let conflict = 0;
+
+  // Check rows for conflicts
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      const value1 = board[row][col];
+      if (value1 === 0) continue;
+
+      // Check if value1 belongs in this row
+      const value1TargetRow = Math.floor((value1 - 1) / 3);
+      if (value1TargetRow !== row) continue;
+
+      // Compare with other tiles in the same row
+      for (let col2 = col + 1; col2 < 3; col2++) {
+        const value2 = board[row][col2];
+        if (value2 === 0) continue;
+
+        const value2TargetRow = Math.floor((value2 - 1) / 3);
+        // If both tiles belong in this row and are in reverse order
+        if (value2TargetRow === row && value1 > value2) {
+          conflict += 2;
+        }
+      }
+    }
+  }
+
+  // Check columns for conflicts
+  for (let col = 0; col < 3; col++) {
+    for (let row = 0; row < 3; row++) {
+      const value1 = board[row][col];
+      if (value1 === 0) continue;
+
+      // Check if value1 belongs in this column
+      const value1TargetCol = (value1 - 1) % 3;
+      if (value1TargetCol !== col) continue;
+
+      // Compare with other tiles in the same column
+      for (let row2 = row + 1; row2 < 3; row2++) {
+        const value2 = board[row2][col];
+        if (value2 === 0) continue;
+
+        const value2TargetCol = (value2 - 1) % 3;
+        // If both tiles belong in this column and are in reverse order
+        if (value2TargetCol === col && value1 > value2) {
+          conflict += 2;
+        }
+      }
+    }
+  }
+
+  return conflict;
+};
+
 export const directions = [
   { row: -1, col: 0, move: "UP" },
   { row: 1, col: 0, move: "DOWN" },
@@ -165,67 +227,6 @@ export const findTilePosition = (
     }
   }
   return { row: -1, col: -1 };
-};
-
-export const astar = (initialState: PuzzleState): string[] => {
-  const openSet: Node[] = [];
-  const closedSet = new Set<string>();
-
-  const startNode: Node = {
-    state: initialState,
-    parent: null,
-    g: 0,
-    h: getManhattanDistance(initialState.board),
-    f: 0,
-  };
-  startNode.f = startNode.g + startNode.h;
-
-  openSet.push(startNode);
-
-  while (openSet.length > 0) {
-    const current = openSet.reduce(
-      (min, node) => node.f < min.f ? node : min,
-      openSet[0],
-    );
-
-    if (isSolved(current.state.board)) {
-      return current.state.path;
-    }
-
-    openSet.splice(openSet.indexOf(current), 1);
-    closedSet.add(boardToString(current.state.board));
-
-    const moves = getValidMoves(current.state);
-
-    for (const move of moves) {
-      const boardStr = boardToString(move.board);
-      if (closedSet.has(boardStr)) continue;
-
-      const g = current.g + 1;
-      const h = getManhattanDistance(move.board);
-
-      const existingNode = openSet.find((n) =>
-        boardToString(n.state.board) === boardStr
-      );
-
-      if (!existingNode) {
-        const newNode: Node = {
-          state: move,
-          parent: current,
-          g,
-          h,
-          f: g + h,
-        };
-        openSet.push(newNode);
-      } else if (g < existingNode.g) {
-        existingNode.g = g;
-        existingNode.f = g + existingNode.h;
-        existingNode.parent = current;
-      }
-    }
-  }
-
-  return [];
 };
 
 export const boardToString = (board: number[][]): string => {

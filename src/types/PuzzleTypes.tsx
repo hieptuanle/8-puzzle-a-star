@@ -27,3 +27,5 @@ export type QueueItem = {
   isVisited: boolean;
   isNew: boolean;
 };
+
+export type HFunction = "manhattan" | "euclidean" | "manhattan-linear-conflict";

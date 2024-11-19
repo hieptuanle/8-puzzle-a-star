@@ -30,9 +30,12 @@ pnpm run dev
 Thuật toán hàm heuristic có trong file `src/utils/puzzleUtils.ts`:
 
 - Manhattan Distance
-- Euclidean Distance (Hiện đang sử dụng hàm này)
+- Euclidean Distance (mặc định)
+- Manhattan Distance + Linear Conflict (tối ưu nhất)
 
 ### Euclidean Distance
+
+Khoảng cách Euclid là một hàm heuristic tính tổng khoảng cách đường thẳng (theo đường chéo) từ vị trí hiện tại của mỗi ô đến vị trí mục tiêu của nó.
 
 ```typescript
 export const getEuclideanDistance = (board: number[][]): number => {
@@ -55,6 +58,8 @@ export const getEuclideanDistance = (board: number[][]): number => {
 
 ### Manhattan Distance
 
+Tổng khoảng cách mỗi ô cách vị trí mục tiêu của nó, đo bằng số bước lưới (lên, xuống, trái, phải).
+
 ```typescript
 export const getManhattanDistance = (board: number[][]): number => {
   let distance = 0;
@@ -69,6 +74,66 @@ export const getManhattanDistance = (board: number[][]): number => {
     }
   }
   return distance;
+};
+```
+
+### Linear Conflict (Xung đột tuyến tính)
+
+Một cải tiến của Khoảng cách Manhattan bằng cách thêm chi phí khi hai ô ở đúng hàng hoặc cột mục tiêu nhưng bị đảo ngược so với vị trí mục tiêu của chúng.
+
+```typescript
+export const getLinearConflict = (board: number[][]): number => {
+  let conflict = 0;
+
+  // Check rows for conflicts
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      const value1 = board[row][col];
+      if (value1 === 0) continue;
+
+      // Check if value1 belongs in this row
+      const value1TargetRow = Math.floor((value1 - 1) / 3);
+      if (value1TargetRow !== row) continue;
+
+      // Compare with other tiles in the same row
+      for (let col2 = col + 1; col2 < 3; col2++) {
+        const value2 = board[row][col2];
+        if (value2 === 0) continue;
+
+        const value2TargetRow = Math.floor((value2 - 1) / 3);
+        // If both tiles belong in this row and are in reverse order
+        if (value2TargetRow === row && value1 > value2) {
+          conflict += 2;
+        }
+      }
+    }
+  }
+
+  // Check columns for conflicts
+  for (let col = 0; col < 3; col++) {
+    for (let row = 0; row < 3; row++) {
+      const value1 = board[row][col];
+      if (value1 === 0) continue;
+
+      // Check if value1 belongs in this column
+      const value1TargetCol = (value1 - 1) % 3;
+      if (value1TargetCol !== col) continue;
+
+      // Compare with other tiles in the same column
+      for (let row2 = row + 1; row2 < 3; row2++) {
+        const value2 = board[row2][col];
+        if (value2 === 0) continue;
+
+        const value2TargetCol = (value2 - 1) % 3;
+        // If both tiles belong in this column and are in reverse order
+        if (value2TargetCol === col && value1 > value2) {
+          conflict += 2;
+        }
+      }
+    }
+  }
+
+  return conflict;
 };
 ```
 
