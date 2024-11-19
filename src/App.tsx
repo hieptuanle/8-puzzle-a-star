@@ -169,7 +169,7 @@ function App() {
 
     setSelectedMove(newQueueItems[0]);
 
-    if (isSolved(gameState.board)) {
+    if (isSolved(newPuzzleState.board)) {
       setIsAutoPlaying(false);
     }
   }, [gameState, visitedStates, queueItems, hFunction]);
@@ -294,11 +294,20 @@ function App() {
               </button>
 
               <button
-                onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+                onClick={() => {
+                  setIsAutoPlaying(!isAutoPlaying);
+                  if (isSolved(gameState.board)) {
+                    setIsAutoPlaying(false);
+                  } else {
+                    handleNextMove();
+                  }
+                }}
                 disabled={isSolved(gameState.board)}
                 className={`px-6 py-2 rounded-lg font-semibold flex items-center justify-center gap-2 ${
                   isAutoPlaying
                     ? "bg-red-500 hover:bg-red-600 text-white"
+                    : isSolved(gameState.board)
+                    ? "bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed"
                     : "bg-blue-500 hover:bg-blue-600 text-white"
                 }`}
               >
@@ -307,7 +316,7 @@ function App() {
                 ) : (
                   <Play className="w-4 h-4" />
                 )}
-                {isAutoPlaying ? "Tạm dừng" : "Tự động đi tiếp"}
+                {isAutoPlaying ? "Tạm dừng" : "Tự động"}
               </button>
             </div>
             <div className="mt-4 text-gray-600 flex justify-center">
