@@ -42,6 +42,20 @@ function App() {
   const initialConfigRef = useRef<HTMLInputElement>(null);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
+  const resetGame = useCallback(
+    (initialConfig?: string) => {
+      const newState = createInitialState(initialConfig);
+      setGameState(newState);
+      setLastMovedTile(null);
+      setVisitedStates([]);
+      const queue = new PQueue(getNextQueueItems(newState, [], [], hFunction));
+      setQueueItems(queue.getItems());
+      setHistory([]);
+      setSelectedMove(queue.first() || null);
+    },
+    [hFunction]
+  );
+
   useEffect(() => {
     const initialConfig = localStorage.getItem("puzzle-config");
     if (initialConfig) {
@@ -49,7 +63,7 @@ function App() {
       inputRef.value = initialConfig;
       resetGame(initialConfig);
     }
-  }, []);
+  }, [resetGame]);
 
   const handleTileClick = (value: number) => {
     if (value === 0) return;
@@ -172,17 +186,6 @@ function App() {
       setIsAutoPlaying(false);
     }
   }, [gameState, visitedStates, queueItems, hFunction]);
-
-  const resetGame = (initialConfig?: string) => {
-    const newState = createInitialState(initialConfig);
-    setGameState(newState);
-    setLastMovedTile(null);
-    setVisitedStates([]);
-    const queue = new PQueue(getNextQueueItems(newState, [], [], hFunction));
-    setQueueItems(queue.getItems());
-    setHistory([]);
-    setSelectedMove(queue.first() || null);
-  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
